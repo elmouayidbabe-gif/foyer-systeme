@@ -14,47 +14,50 @@ public class StudentServiceImpl implements StudentService {
 
     private final StudentRepository studentRepository;
 
-    // ---------------- MAPPER ----------------
     private StudentDTO mapToDTO(Student student) {
+
         return new StudentDTO(
                 student.getId(),
                 student.getFirstName(),
-                student.getLastName()
+                student.getLastName(),
+                student.getEmail(),
+                student.getCin(),
+                student.getDateOfBirth()
         );
     }
 
-    // ---------------- ADD ----------------
     @Override
     public StudentDTO addStudent(Student student) {
+
         Student saved = studentRepository.save(student);
+
         return mapToDTO(saved);
     }
 
-    // ---------------- GET ALL ----------------
     @Override
     public List<StudentDTO> getAllStudents() {
+
         return studentRepository.findAll()
                 .stream()
                 .map(this::mapToDTO)
                 .toList();
     }
 
-    // ---------------- GET BY ID ----------------
     @Override
     public StudentDTO getStudentById(Long id) {
+
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
         return mapToDTO(student);
     }
 
-    // ---------------- DELETE ----------------
     @Override
     public void deleteStudent(Long id) {
+
         studentRepository.deleteById(id);
     }
 
-    // ---------------- UPDATE ----------------
     @Override
     public StudentDTO updateStudent(Long id, Student student) {
 
@@ -62,10 +65,18 @@ public class StudentServiceImpl implements StudentService {
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
         existing.setFirstName(student.getFirstName());
-        existing.setFirstName(student.getLastName());
+        existing.setLastName(student.getLastName());
+        existing.setEmail(student.getEmail());
+        existing.setCin(student.getCin());
+        existing.setDateOfBirth(student.getDateOfBirth());
 
         Student updated = studentRepository.save(existing);
 
         return mapToDTO(updated);
+    }
+    @Override
+    public Student getStudentEntityById(Long id) {
+        return studentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
     }
 }

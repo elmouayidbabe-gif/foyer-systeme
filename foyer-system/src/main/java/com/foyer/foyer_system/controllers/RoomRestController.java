@@ -11,13 +11,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/rooms")
+@RequestMapping("/api/rooms")
 @RequiredArgsConstructor
 public class RoomRestController {
 
     private final RoomService roomService;
 
-    // ---------------- GET ALL ----------------
     @GetMapping
     public ApiResponse<List<RoomDTO>> getAllRooms() {
 
@@ -28,7 +27,6 @@ public class RoomRestController {
         );
     }
 
-    // ---------------- GET BY ID ----------------
     @GetMapping("/{id}")
     public ApiResponse<RoomDTO> getRoomById(@PathVariable Long id) {
 
@@ -39,7 +37,6 @@ public class RoomRestController {
         );
     }
 
-    // ---------------- ADD ----------------
     @PostMapping
     public ApiResponse<RoomDTO> addRoom(@Valid @RequestBody Room room) {
 
@@ -50,7 +47,19 @@ public class RoomRestController {
         );
     }
 
-    // ---------------- DELETE ----------------
+    @PutMapping("/{id}")
+    public ApiResponse<RoomDTO> updateRoom(
+            @PathVariable Long id,
+            @RequestBody Room room
+    ) {
+
+        return new ApiResponse<>(
+                "success",
+                "Room updated successfully",
+                roomService.updateRoom(id, room)
+        );
+    }
+
     @DeleteMapping("/{id}")
     public ApiResponse<String> deleteRoom(@PathVariable Long id) {
 

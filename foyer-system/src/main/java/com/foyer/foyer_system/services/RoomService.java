@@ -13,6 +13,8 @@ public interface RoomService {
 
    RoomDTO getRoomById(Long id);
 
+   Room getRoomByIdEntity(Long id);
+
    RoomDTO updateRoom(Long id, Room room);
 
    void deleteRoom(Long id);

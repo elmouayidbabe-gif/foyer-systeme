@@ -1,7 +1,8 @@
 package com.foyer.foyer_system.entities;
 
 import jakarta.persistence.*;
-import lombok.*;
+        import lombok.*;
+        import java.time.LocalDate;
 
 @Entity
 @Getter
@@ -10,14 +11,20 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Affectation {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @ManyToOne
-    private Student student;
+
+    private LocalDate startDate;
+    private LocalDate endDate;
+
+    @Enumerated(EnumType.STRING)
+    private Status status;
+
     @ManyToOne
     private Room room;
-    private java.time.LocalDate startDate;
-    private java.time.LocalDate endDate;
-    private String status;
+
+    @ManyToOne
+    private Student student;
 }

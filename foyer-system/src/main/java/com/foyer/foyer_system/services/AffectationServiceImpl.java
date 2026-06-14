@@ -3,7 +3,11 @@ package com.foyer.foyer_system.services;
 import com.foyer.foyer_system.dto.AffectationDTO;
 import com.foyer.foyer_system.entities.Affectation;
 import com.foyer.foyer_system.entities.Room;
+import com.foyer.foyer_system.entities.Status;
+import com.foyer.foyer_system.entities.Student;
 import com.foyer.foyer_system.repositories.AffectationRepository;
+import com.foyer.foyer_system.repositories.RoomRepository;
+import com.foyer.foyer_system.repositories.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,42 +18,53 @@ import java.util.List;
 public class AffectationServiceImpl implements AffectationService {
 
     private final AffectationRepository affectationRepository;
+    private final StudentRepository studentRepository;
+    private final RoomRepository roomRepository;
 
-    // ---------------- MAPPING ----------------
-    private AffectationDTO mapToDTO(Affectation affectation) {
+    // ================= MAPPING =================
+    private AffectationDTO mapToDTO(Affectation a) {
+
         AffectationDTO dto = new AffectationDTO();
-        dto.setId(affectation.getId());
-        dto.setStudentId(affectation.getStudent().getId());
-        dto.setRoomId(affectation.getRoom().getId());
+
+        dto.setId(a.getId());
+
+        if (a.getStudent() != null) {
+            dto.setStudentId(a.getStudent().getId());
+            dto.setStudentName(
+                    a.getStudent().getFirstName() + " " + a.getStudent().getLastName()
+            );
+        }
+
+        if (a.getRoom() != null) {
+            dto.setRoomId(a.getRoom().getId());
+            dto.setRoomNumber(a.getRoom().getRoomNumber());
+        }
+
+        dto.setStatus(a.getStatus());
+
         return dto;
     }
 
-    // ---------------- ADD ----------------
+    // ================= CREATE =================
     @Override
-    public AffectationDTO addAffectation(Affectation affectation) {
+    public AffectationDTO addAffectation(AffectationDTO dto) {
 
-        Room room = affectation.getRoom();
+        Student student = studentRepository.findById(dto.getStudentId())
+                .orElseThrow(() -> new RuntimeException("Student not found"));
 
-        int currentStudents =
-                (room.getAffectations() == null) ? 0 : room.getAffectations().size();
+        Room room = roomRepository.findById(dto.getRoomId())
+                .orElseThrow(() -> new RuntimeException("Room not found"));
 
-        if (currentStudents >= room.getCapacity()) {
-            throw new RuntimeException("Room is full");
-        }
+        Affectation a = new Affectation();
 
-        List<Affectation> existing = affectationRepository.findByStudentId(
-                affectation.getStudent().getId()
-        );
+        a.setStudent(student);
+        a.setRoom(room);
+        a.setStatus(Status.PENDING);
 
-        if (!existing.isEmpty()) {
-            throw new RuntimeException("Student already has a room");
-        }
-
-        Affectation saved = affectationRepository.save(affectation);
-        return mapToDTO(saved);
+        return mapToDTO(affectationRepository.save(a));
     }
 
-    // ---------------- GET ALL ----------------
+    // ================= GET ALL =================
     @Override
     public List<AffectationDTO> getAllAffectations() {
         return affectationRepository.findAll()
@@ -58,20 +73,73 @@ public class AffectationServiceImpl implements AffectationService {
                 .toList();
     }
 
-    // ---------------- GET BY ID ----------------
+    // ================= GET BY ID =================
     @Override
     public AffectationDTO getAffectationById(Long id) {
-        Affectation affectation = affectationRepository.findById(id)
-                .orElse(null);
 
-        if (affectation == null) return null;
+        Affectation a = affectationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Affectation not found"));
 
-        return mapToDTO(affectation);
+        return mapToDTO(a);
     }
 
-    // ---------------- DELETE ----------------
+    // ================= DELETE =================
     @Override
     public void deleteAffectation(Long id) {
         affectationRepository.deleteById(id);
+    }
+
+    // ================= APPROVE =================
+    @Override
+    public AffectationDTO approveAffectation(Long id) {
+
+        Affectation a = affectationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Affectation not found"));
+
+        a.setStatus(Status.APPROVED);
+
+        return mapToDTO(affectationRepository.save(a));
+    }
+
+    // ================= REJECT =================
+    @Override
+    public AffectationDTO rejectAffectation(Long id) {
+
+        Affectation a = affectationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Affectation not found"));
+
+        a.setStatus(Status.REJECTED);
+
+        return mapToDTO(affectationRepository.save(a));
+    }
+
+    // ================= PENDING =================
+    @Override
+    public AffectationDTO setPending(Long id) {
+
+        Affectation a = affectationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Affectation not found"));
+
+        a.setStatus(Status.PENDING);
+
+        return mapToDTO(affectationRepository.save(a));
+    }
+    @Override
+    public AffectationDTO updateAffectation(Long id, AffectationDTO dto) {
+
+        Affectation a = affectationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Affectation not found"));
+
+        Student student = studentRepository.findById(dto.getStudentId())
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        Room room = roomRepository.findById(dto.getRoomId())
+                .orElseThrow(() -> new RuntimeException("Room not found"));
+
+        a.setStudent(student);
+        a.setRoom(room);
+        a.setStatus(dto.getStatus());
+
+        return mapToDTO(affectationRepository.save(a));
     }
 }
